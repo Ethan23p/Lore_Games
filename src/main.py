@@ -1,85 +1,82 @@
-import asyncio
-from mcp_agent.core.fastagent import FastAgent
-from src.lore_types import Agent, Environment, TurnId
-from src.ai_handler import AIHandler
-from src.state_logger import StateLogger
+from .lore_objects import Agent, Environment
+from . import config
+import os
+import shutil
 
-# --- Application Setup ---
 
-fast = FastAgent("Lore Games Agent")
-
-@fast.agent(
-  instruction="You are a helpful assistant, ready to help with lore and games."
-)
-async def main():
-  """
-  Main entry point for the agent.
-
-  This will start the agent in interactive mode.
-  """
-  async with fast.run() as agent:
-    await agent.interactive()
-
-# --- Simulation Mock-up ---
-
-def run_simulation_mockup():
+class Game:
     """
-    This function initializes and runs the simulation by calling the
-    encapsulated turn logic in the Environment class.
+    The main game loop.
     """
-    # --- Configuration Stub ---
-    config = {
-        "enable_state_logging": True,
-        "initial_reality": "A vast, empty plain stretches under a grey sky.",
-        "agents": [
-            {"name": "Alice", "personality": "curious"},
-            {"name": "Bob", "personality": "cautious"}
-        ],
-        "max_turns": 3
-    }
 
-    print("--- Initializing Simulation ---")
+    def __init__(self):
+        self.env = Environment()
+        self.agents = [
+            Agent(agent["name"], agent["personality"]) for agent in config.AGENTS
+        ]
+        self.num_turns = config.NUM_TURNS
 
-    # Initialization
-    logger = StateLogger() if config["enable_state_logging"] else None
-    ai_handler = AIHandler()
+    def setup(self):
+        """
+        Initializes the game state and cleans the log directory.
+        """
+        if config.LOGGING_ENABLED:
+            log_dir = ".state_dump"
+            if os.path.exists(log_dir):
+                shutil.rmtree(log_dir)
+            os.makedirs(log_dir)
 
-    agents = [
-        Agent(
-            name=p["name"],
-            personality=p["personality"],
-            ai_handler=ai_handler,
-            logger=logger
-        ) for p in config["agents"]
-    ]
-    env = Environment(
-        agents=agents,
-        initial_reality=config["initial_reality"],
-        ai_handler=ai_handler,
-        logger=logger
-    )
-    turn_counter = TurnId(0)
+        print("--- SETUP ---")
+        for agent in self.agents:
+            perspective = self.env.reflect(agent.agent_name)
+            agent.perceive(perspective)
+            print(
+                f"{agent.agent_name} perception: "
+                f"{agent.perception.content if agent.perception else 'None'}"
+            )
+        print("-------------")
 
-    print(f"Initialized {len(agents)} agents and environment.")
-    if logger:
-        print(f"State logging is enabled. Output will be in '{logger.output_dir}/'")
+    def main_loop(self):
+        """
+        The main game loop.
+        """
+        for i in range(self.num_turns):
+            self.env.turn = i
+            print(f"--- TURN {i} ---")
 
+            # Agents introspect and intend
+            for agent in self.agents:
+                agent.introspect(self.env.turn)
+                intention = agent.intend(self.env.turn)
+                self.env.agents_intentions[agent.agent_name] = intention
+                print(f"{agent.agent_name} intention: {intention.content}")
 
-    # --- Main Loop ---
-    print("\n--- Starting Main Loop ---")
-    while turn_counter < config["max_turns"]:
-        print(f"\n--- Turn {turn_counter} ---")
+            # Environment processes intentions into actions
+            for agent_name, intention in self.env.agents_intentions.items():
+                self.env.physics(intention)
 
-        if logger:
-            logger.clear_turn_logs()
+            # Environment divines the outcome of the turn
+            divination = self.env.divine()
+            print(f"Divination: {divination.content}")
 
-        env.run_turn(turn_counter)
+            # Agents perceive the new reality
+            for agent in self.agents:
+                perspective = self.env.reflect(agent.agent_name)
+                agent.perceive(perspective)
+                print(
+                f"{agent.agent_name} perception: "
+                f"{agent.perception.content if agent.perception else 'None'}"
+            )
+            print("-------------")
 
-        turn_counter = TurnId(turn_counter + 1)
+    def run(self):
+        """
+        Runs the game.
+        """
+        self.setup()
+        self.main_loop()
+
 
 if __name__ == "__main__":
-    # We are not running the FastAgent for now, just the simulation mockup.
-    # print("Starting Lore Games Agent...")
-    # asyncio.run(main())
-
-    run_simulation_mockup()
+    game = Game()
+    game.run()
