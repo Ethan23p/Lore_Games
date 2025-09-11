@@ -1,9 +1,9 @@
-# Turn 2
+# Turn 0
 
 ## Prompt
 
 ```
-Given dummy content, can Charlie do dummy content?
+Given A vast, empty plain under a grey sky., can Charlie do dummy content?
 ```
 
 ## Content

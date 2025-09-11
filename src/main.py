@@ -1,4 +1,5 @@
 from .lore_objects import Agent, Environment
+from .ai_handler import AIHandler
 from . import config
 import os
 import shutil
@@ -10,15 +11,18 @@ class Game:
     """
 
     def __init__(self):
-        self.env = Environment()
+        ai_handler = AIHandler()
+        self.env = Environment(
+            ai_handler=ai_handler, initial_reality=config.INITIAL_REALITY
+        )
         self.agents = [
-            Agent(agent["name"], agent["personality"]) for agent in config.AGENTS
+            Agent(agent["name"], agent["personality"], ai_handler=ai_handler)
+            for agent in config.AGENTS
         ]
-        self.num_turns = config.NUM_TURNS
 
-    def setup(self):
+    def _setup_logging(self):
         """
-        Initializes the game state and cleans the log directory.
+        Cleans and creates the log directory.
         """
         if config.LOGGING_ENABLED:
             log_dir = ".state_dump"
@@ -26,55 +30,36 @@ class Game:
                 shutil.rmtree(log_dir)
             os.makedirs(log_dir)
 
-        print("--- SETUP ---")
+    def setup(self):
+        """
+        Initializes the game state.
+        """
+        self._setup_logging()
+
         for agent in self.agents:
             perspective = self.env.reflect(agent.agent_name)
             agent.perceive(perspective)
-            print(
-                f"{agent.agent_name} perception: "
-                f"{agent.perception.content if agent.perception else 'None'}"
-            )
-        print("-------------")
 
-    def main_loop(self):
+    def _run_turn(self, turn_num: int):
         """
-        The main game loop.
+        Runs a single turn of the simulation.
         """
-        for i in range(self.num_turns):
-            self.env.turn = i
-            print(f"--- TURN {i} ---")
-
-            # Agents introspect and intend
-            for agent in self.agents:
-                agent.introspect(self.env.turn)
-                intention = agent.intend(self.env.turn)
-                self.env.agents_intentions[agent.agent_name] = intention
-                print(f"{agent.agent_name} intention: {intention.content}")
-
-            # Environment processes intentions into actions
-            for agent_name, intention in self.env.agents_intentions.items():
-                self.env.physics(intention)
-
-            # Environment divines the outcome of the turn
-            divination = self.env.divine()
-            print(f"Divination: {divination.content}")
-
-            # Agents perceive the new reality
-            for agent in self.agents:
-                perspective = self.env.reflect(agent.agent_name)
-                agent.perceive(perspective)
-                print(
-                f"{agent.agent_name} perception: "
-                f"{agent.perception.content if agent.perception else 'None'}"
-            )
-            print("-------------")
+        self.env.turn = turn_num
+        self.env.advance_turn(self.agents)
 
     def run(self):
         """
-        Runs the game.
+        Runs the game, advancing turns on user input.
         """
         self.setup()
-        self.main_loop()
+        turn_counter = 0
+        try:
+            while True:
+                self._run_turn(turn_counter)
+                input("\nPress Enter to advance to the next turn...")
+                turn_counter += 1
+        except KeyboardInterrupt:
+            print("\nSimulation ended by user.")
 
 
 if __name__ == "__main__":

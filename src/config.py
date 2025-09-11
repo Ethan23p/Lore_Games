@@ -4,7 +4,7 @@ Central configuration for the Lore Games simulation.
 
 # Simulation parameters
 LOGGING_ENABLED = True
-NUM_TURNS = 3
+DEBUG_PRINTING_ENABLED = True
 
 # Agent configuration
 AGENTS = [

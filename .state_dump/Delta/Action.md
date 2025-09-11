@@ -1,9 +1,9 @@
-# Turn 2
+# Turn 0
 
 ## Prompt
 
 ```
-Given dummy content, can Delta do dummy content?
+Given A vast, empty plain under a grey sky., can Delta do dummy content?
 ```
 
 ## Content

@@ -1,35 +1,42 @@
+from __future__ import annotations
 from .ai_handler import AIHandler
 from typing import List, Dict, Optional
 from . import config
 import os
 
-PROMPT_TEMPLATES = {
-    "Perspective": "Given {reality}, what does {agent_name} perceive at this moment?",
-    "Introspection": (
-        "You are {agent_name}, you've been described as {personality}.\n"
-        "Your memory of what has happened so far: {memory}\n"
-        "What you have noticed recently: {perception}\n"
-        "Consider these latest events, private matters, your motivations. "
-        "What do you want to add to your memory?"
-    ),
-    "Intention": (
-        "You are {agent_name}, you've been described as {personality}.\n"
-        "What has happened so far: {memory}\n"
-        "What you've noticed recently: {perception}\n"
-        "What do you *intend* to do next, in the physical realm? "
-        "If your intent is conceivable, you will attempt to execute; "
-        "be mindful that if your intent is not possible, you will "
-        "effectively do nothing at all."
-    ),
-    "Action": "Given {reality}, can {intent_owner} do {intent}?",
-    "Divination": (
-        "Given {reality} and the agents' intention to do the following, "
-        "what happens next? {agents_actions}"
-    ),
-}
+class PromptLibrary:
+    """
+    A library of prompt templates for the simulation.
+    """
+
+    TEMPLATES = {
+        "Perspective": "Given {reality}, what does {agent_name} perceive at this moment?",
+        "Introspection": (
+            "You are {agent_name}, you've been described as {personality}.\n"
+            "Your memory of what has happened so far: {memory}\n"
+            "What you have noticed recently: {perception}\n"
+            "Consider these latest events, private matters, your motivations. "
+            "What do you want to add to your memory?"
+        ),
+        "Intention": (
+            "You are {agent_name}, you've been described as {personality}.\n"
+            "What has happened so far: {memory}\n"
+            "What you've noticed recently: {perception}\n"
+            "What do you *intend* to do next, in the physical realm? "
+            "If your intent is conceivable, you will attempt to execute; "
+            "be mindful that if your intent is not possible, you will "
+            "effectively do nothing at all."
+        ),
+        "Action": "Given {reality}, can {intent_owner} do {intent}?",
+        "Divination": (
+            "Given {reality} and the agents' intention to do the following, "
+            "what happens next? {agents_actions}"
+        ),
+    }
 
 
 def _log_interaction(interaction):
+
     """
     Logs the details of an interaction to a file, overwriting fleeting states
     and appending to continuous states.
@@ -65,19 +72,34 @@ def _log_interaction(interaction):
         f.write(content)
 
 
+def _debug_print(interaction):
+    """
+    Prints a concise summary of an interaction to the console for debugging.
+    """
+    if not config.DEBUG_PRINTING_ENABLED:
+        return
+
+    interaction_type = interaction.__class__.__name__
+    owner = interaction.owner
+    turn = interaction.birth_turn
+    content = interaction.content.strip()
+
+    print(f"[TURN {turn} | {owner} | {interaction_type}] -> \"{content}\"")
+
+
 class Interaction:
     """
     Base class for all interactions.
     """
 
 
-    def __init__(self, owner: str, birth_turn: int, prompt_template: str = ""):
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler, prompt_template: str = ""):
         self.owner = owner
         self.birth_turn = birth_turn
         self._prompt_template = prompt_template
         self.prompt = ""
         self.content = ""
-        self.ai_handler = AIHandler()
+        self.ai_handler = ai_handler
 
     def _create_prompt(self, *args, **kwargs):
         """
@@ -93,7 +115,9 @@ class Interaction:
         self._create_prompt(**kwargs)
         self.content = self.ai_handler.generate(self.prompt)
         _log_interaction(self)
+        _debug_print(self)
         return self.content
+
 
 
 
@@ -102,9 +126,9 @@ class Perspective(Interaction):
     Represents the perspective of an agent.
     """
 
-    def __init__(self, owner: str, birth_turn: int):
-        prompt_template = PROMPT_TEMPLATES["Perspective"]
-        super().__init__(owner, birth_turn, prompt_template)
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler):
+        prompt_template = PromptLibrary.TEMPLATES["Perspective"]
+        super().__init__(owner, birth_turn, ai_handler, prompt_template)
 
     def _create_prompt(self, reality: str, agent_name: str, **kwargs):
         self.prompt = self._prompt_template.format(
@@ -118,8 +142,8 @@ class Perception(Interaction):
     This is typically the result of a Perspective interaction.
     """
 
-    def __init__(self, owner: str, birth_turn: int, content: str):
-        super().__init__(owner, birth_turn)
+    def __init__(self, owner: str, birth_turn: int, content: str, ai_handler: AIHandler):
+        super().__init__(owner, birth_turn, ai_handler)
         self.content = content
 
 
@@ -128,9 +152,9 @@ class Introspection(Interaction):
     Represents an agent's introspection.
     """
 
-    def __init__(self, owner: str, birth_turn: int):
-        prompt_template = PROMPT_TEMPLATES["Introspection"]
-        super().__init__(owner, birth_turn, prompt_template)
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler):
+        prompt_template = PromptLibrary.TEMPLATES["Introspection"]
+        super().__init__(owner, birth_turn, ai_handler, prompt_template)
 
     def _create_prompt(
         self,
@@ -153,9 +177,9 @@ class Intention(Interaction):
     Represents an agent's intention.
     """
 
-    def __init__(self, owner: str, birth_turn: int):
-        prompt_template = PROMPT_TEMPLATES["Intention"]
-        super().__init__(owner, birth_turn, prompt_template)
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler):
+        prompt_template = PromptLibrary.TEMPLATES["Intention"]
+        super().__init__(owner, birth_turn, ai_handler, prompt_template)
 
     def _create_prompt(
         self,
@@ -178,9 +202,9 @@ class Action(Interaction):
     Represents an agent's action.
     """
 
-    def __init__(self, owner: str, birth_turn: int):
-        prompt_template = PROMPT_TEMPLATES["Action"]
-        super().__init__(owner, birth_turn, prompt_template)
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler):
+        prompt_template = PromptLibrary.TEMPLATES["Action"]
+        super().__init__(owner, birth_turn, ai_handler, prompt_template)
 
     def _create_prompt(self, reality: str, intent_owner: str, intent: str, **kwargs):
         self.prompt = self._prompt_template.format(
@@ -193,9 +217,9 @@ class Divination(Interaction):
     Represents the outcome of a turn.
     """
 
-    def __init__(self, owner: str, birth_turn: int):
-        prompt_template = PROMPT_TEMPLATES["Divination"]
-        super().__init__(owner, birth_turn, prompt_template)
+    def __init__(self, owner: str, birth_turn: int, ai_handler: AIHandler):
+        prompt_template = PromptLibrary.TEMPLATES["Divination"]
+        super().__init__(owner, birth_turn, ai_handler, prompt_template)
 
     def _create_prompt(self, reality: str, agents_actions: str, **kwargs):
         self.prompt = self._prompt_template.format(
@@ -204,14 +228,16 @@ class Divination(Interaction):
 
 
 
+
 class Agent:
     """
     Represents an agent in the simulation.
     """
 
-    def __init__(self, agent_name: str, personality: str):
+    def __init__(self, agent_name: str, personality: str, ai_handler: AIHandler):
         self.agent_name = agent_name
         self.personality = personality
+        self.ai_handler = ai_handler
         self.memory: List[Introspection] = []
         self.perception: Optional[Perception] = None
 
@@ -223,6 +249,7 @@ class Agent:
             owner=self.agent_name,
             birth_turn=perspective.birth_turn,
             content=perspective.content,
+            ai_handler=self.ai_handler,
         )
         return self.perception
 
@@ -230,7 +257,9 @@ class Agent:
         """
         Integrate latest events, consider private matters, consider motivations, consider personality.
         """
-        introspection = Introspection(owner=self.agent_name, birth_turn=birth_turn)
+        introspection = Introspection(
+            owner=self.agent_name, birth_turn=birth_turn, ai_handler=self.ai_handler
+        )
         memory_str = "\n".join([i.content for i in self.memory])
         perception_str = self.perception.content if self.perception else ""
         introspection.generate(
@@ -246,7 +275,9 @@ class Agent:
         """
         Put forward intention within the physical, simulated realm.
         """
-        intention = Intention(owner=self.agent_name, birth_turn=birth_turn)
+        intention = Intention(
+            owner=self.agent_name, birth_turn=birth_turn, ai_handler=self.ai_handler
+        )
         memory_str = "\n".join([i.content for i in self.memory])
         perception_str = self.perception.content if self.perception else ""
         intention.generate(
@@ -263,7 +294,9 @@ class Environment:
     Represents the simulation environment.
     """
 
-    def __init__(self):
+    def __init__(self, ai_handler: AIHandler, initial_reality: str):
+        self.ai_handler = ai_handler
+        self.initial_reality = initial_reality
         self.reality: List[Divination] = []
         self.agents_intentions: Dict[str, Intention] = {}
         self.agents_actions: Dict[str, Action] = {}
@@ -273,8 +306,10 @@ class Environment:
         """
         Simply evaluate if stated intention is conceivable or not.
         """
-        action = Action(owner=intention.owner, birth_turn=self.turn)
-        reality_str = self.reality[-1].content if self.reality else config.INITIAL_REALITY
+        action = Action(
+            owner=intention.owner, birth_turn=self.turn, ai_handler=self.ai_handler
+        )
+        reality_str = self.reality[-1].content if self.reality else self.initial_reality
         
         # Dummy logic: for now, all intentions are possible
         is_possible = True
@@ -291,8 +326,10 @@ class Environment:
         """
         Taking into consideration all agents' intentions in equal parts, what happens next.
         """
-        divination = Divination(owner="environment", birth_turn=self.turn)
-        reality_str = self.reality[-1].content if self.reality else config.INITIAL_REALITY
+        divination = Divination(
+            owner="environment", birth_turn=self.turn, ai_handler=self.ai_handler
+        )
+        reality_str = self.reality[-1].content if self.reality else self.initial_reality
         actions_str = "\n".join(
             [f"{owner}: {action.content}" for owner, action in self.agents_actions.items()]
         )
@@ -304,7 +341,32 @@ class Environment:
         """
         Considering the state of the environment, what would the agent perceive.
         """
-        perspective = Perspective(owner=agent_name, birth_turn=self.turn)
-        reality_str = self.reality[-1].content if self.reality else config.INITIAL_REALITY
+        perspective = Perspective(
+            owner=agent_name, birth_turn=self.turn, ai_handler=self.ai_handler
+        )
+        reality_str = self.reality[-1].content if self.reality else self.initial_reality
         perspective.generate(reality=reality_str, agent_name=agent_name)
         return perspective
+
+
+    def advance_turn(self, agents: List["Agent"]):
+        """
+        Runs a single turn of the simulation.
+        """
+        # Agents introspect and intend
+        for agent in agents:
+            agent.introspect(self.turn)
+            intention = agent.intend(self.turn)
+            self.agents_intentions[agent.agent_name] = intention
+
+        # Environment processes intentions into actions
+        for agent_name, intention in self.agents_intentions.items():
+            self.physics(intention)
+
+        # Environment divines the outcome of the turn
+        self.divine()
+
+        # Agents perceive the new reality
+        for agent in agents:
+            perspective = self.reflect(agent.agent_name)
+            agent.perceive(perspective)
