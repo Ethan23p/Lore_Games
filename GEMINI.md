@@ -24,3 +24,6 @@ python -m src.main
 *   **State Logging**: The project includes a sophisticated logging mechanism that dumps the state of the simulation to the `.state_dump/` directory. This feature is toggleable in the config and distinguishes between fleeting states (like `Action` and `Intention`) and continuous states (like `Introspection` and `Divination`).
 *   **AI Abstraction**: The AI logic is abstracted into the `AIHandler` class in `src/ai_handler.py`. Currently, it uses a dummy implementation that can be replaced with a more advanced AI model.
 *   **Type Hinting**: The codebase makes extensive use of Python's type hints for clarity and maintainability.
+
+## Gemini Notes
+- Outlines and lists don't seem to render properly in the CLI. It's better to use the scratchpad for this kind of structured text.

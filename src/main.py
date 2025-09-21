@@ -1,8 +1,10 @@
 from .lore_objects import Agent, Environment
 from .ai_handler import AIHandler
 from . import config
+from .flows import MainFlow, SimpleFlow
 import os
 import shutil
+import asyncio
 
 
 class Game:
@@ -20,6 +22,13 @@ class Game:
             for agent in config.AGENTS
         ]
 
+        if config.FLOW == "main":
+            self.flow = MainFlow()
+        elif config.FLOW == "simple":
+            self.flow = SimpleFlow()
+        else:
+            raise ValueError(f"Unknown flow type: {config.FLOW}")
+
     def _setup_logging(self):
         """
         Cleans and creates the log directory.
@@ -30,38 +39,42 @@ class Game:
                 shutil.rmtree(log_dir)
             os.makedirs(log_dir)
 
-    def setup(self):
+    async def setup(self):
         """
         Initializes the game state.
         """
         self._setup_logging()
-
-        for agent in self.agents:
-            perspective = self.env.reflect(agent.agent_name)
+        
+        # Have all agents perceive the initial state concurrently
+        perception_tasks = [self.env.reflect(agent.agent_name) for agent in self.agents]
+        perspectives = await asyncio.gather(*perception_tasks)
+        for agent, perspective in zip(self.agents, perspectives):
             agent.perceive(perspective)
 
-    def _run_turn(self, turn_num: int):
+
+    async def run_turn(self, turn_num: int):
         """
         Runs a single turn of the simulation.
         """
         self.env.turn = turn_num
-        self.env.advance_turn(self.agents)
+        await self.flow.execute_turn(self.env, self.agents)
 
-    def run(self):
-        """
-        Runs the game, advancing turns on user input.
-        """
-        self.setup()
-        turn_counter = 0
-        try:
-            while True:
-                self._run_turn(turn_counter)
-                input("\nPress Enter to advance to the next turn...")
-                turn_counter += 1
-        except KeyboardInterrupt:
-            print("\nSimulation ended by user.")
+
+async def main():
+    """
+    The main entry point for the asynchronous simulation.
+    """
+    game = Game()
+    await game.setup()
+    turn_counter = 1
+    try:
+        while True:
+            await game.run_turn(turn_counter)
+            await asyncio.to_thread(input, "\nPress Enter to advance to the next turn...")
+            turn_counter += 1
+    except KeyboardInterrupt:
+        print("\nSimulation ended by user.")
 
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    asyncio.run(main())
