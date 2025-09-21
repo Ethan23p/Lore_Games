@@ -1,77 +1,68 @@
-class PromptLibrary:
-    """
-    A library of prompt templates for the simulation.
-    """
+### prompt_template
+  Note: Don't use HTML style tags as they break formatting.
+	agent
+		primer
+			<ROLE>
+				You are {id}, you are described like this: {personality}.
 
-    TEMPLATES = {
-        "primers": {
-            "agent": "You are {agent_name}. You have been described like so: {personality}.",
-            "environment": (
-                "You are a sophisticated AI tasked with simulating an imagined world with consistency, "
-                "coherence, and attention to detail. All inputs expand the state of this world, and "
-                "your job is to describe realistic outcomes as they unfold."
-            ),
-        },
-        "main_flow": {
-            "perspective": (
-                "Your task now is to describe in detail what {agent_name} perceives in the present moment. "
-                "Emphasize the most relevant sights, sounds, feelings, and conditions specific to their "
-                "perspective, maintaining coherence with the world's history."
-                "The state of the world, up to this point: {reality}"
-            ),
-            "introspection": (
-                "You are {agent_name}, you've been described as: {personality}.\n\n"
-                "This is your personal retelling of everything that has happened so far:\n{memory}\n\n"
-                "Given the following new information:\n> {perception}\n\n"
-                "Taking into consideration these latest happenings, private matters that may have come up so far, "
-                "your personal motivations:\nWhat do you add to your personal retelling, your memory, for this moment?"
-            ),
-            "intention": (
-                "You are {agent_name}, you've been described as: {personality}.\n\n"
-                "This is your personal retelling of everything that has happened so far:\n{memory}\n\n"
-                "This is what's happening and what's most relevant to you, in the current moment:\n> {perception}\n\n"
-                "Taking into consideration these latest happenings, private matters that may have come up so far, "
-                "your personal motivations:\nWhat do you intend to do next, in the physical realm?"
-            ),
-            "action": (
-                "You will be responding with either 'true' or 'false'.\n\n"
-                "This is the narrative detailing of everything that has happened so far:\n{reality}\n\n"
-                "The agent, {intent_owner}, intends to do the following:\n> {intent}\n\n"
-                "Your task is to evaluate if the intent expressed by {intent_owner} is physically possible. "
-                "You have two possible responses and should choose one, respond with:\n"
-                "'true' if the intended action is at least possible.\n"
-                "'false' if the intended action is not possible at all."
-            ),
-            "divination": (
-                "This is the narrative detailing of everything that has happened so far:\n{reality}\n\n"
-                "The independent agents of this world intend to act as follows:\n> {agents_intent}\n\n"
-                "The agents' intents should succeed, but may fail. You must decide in the service of "
-                "consistency, coherence, conflicting forces. The agents' intents may directly oppose "
-                "each other; the outcome of this, too, you must decide.\n\n"
-                "Your task now is to decide how the above reality is impacted by the actions of the "
-                "agents, the passage of time."
-            ),
-        },
-        "simple_flow": {
-            "reflect": (
-                "Setting:\n{reality}\n"
-                "You must describe the world relative to the agent, {agent_name}; as an individual, "
-                "they are often described like this: {personality}.\n"
-                "Within the broader context (physical space, psychological & social realm, etc.), "
-                "what is the unspoken details and context around and about {agent_name}?"
-            ),
-            "planning": (
-                "This is the world around you:\n{reality}\n"
-                "Within this latest context, what do you do next?"
-            ),
-            "divination": (
-                "This is the narrative detailing of everything that has happened so far:\n{reality}\n\n"
-                "The independent agents of this world intend to act as follows:\n> {agents_intent}\n\n"
-                "The agents' intents should succeed, but may fail. You must decide in the service of "
-                "consistency, coherence, conflicting forces. The agents' intents may directly oppose "
-                "each other; the outcome of this, too, you must decide.\n\n"
-                "Your task now is to decide how the above reality is impacted by the actions of the "
-                "agents, the passage of time."
-            ),
-        },
-    }
+				  You recall your earlier perspective:
+
+				  {perspective}.
+				<ROLE END>
+		intent
+			{primer}
+			<PROMPT>
+				You recall everything that has happened so far:
+				<MEMORY>
+					{memory_formatted}
+					<MEMORY END>
+				<PROMPT END>
+	env
+		primer
+			<ROLE>
+				Sophisticated reality simulation engine.
+				<ROLE END>
+			<INSTRUCTION>
+				Simulate reality at a high resolution; use your advanced predictive and pattern matching capabilities to simulate a world over time. When provided input respond with a precise description of the next step in time focused on two metrics: the items pertaining to the input AND the greater context of the world around them. Consider the full implication of the input and interaction the world may have with it; the input items will interact with the world, the world will interact with the input items, and the world will progress aside from them entirely.
+				Respond in a form corresponding to the input.
+				Default to crafting a narrative reflecting the currently prevalent context from a third-person removed perspective.
+				**Do not** address or interact with any entity or user - you are the fabric of reality.
+				<INSTRUCTION END>
+		prep_agent
+			{primer}
+			<INSTRUCTION>
+				Describe the world relative to the agent, {agent.id}; as an individual, they are often described like this: {personality}.
+
+				  Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about {agent.id}.
+				<INSTRUCTION END>
+		reflect
+			{primer}
+			<INSTRUCTION>
+				Detail the *current* state of reality as it pertains, in particular, to the agent, {agent.id}. As an individual, they are often described like this: {personality}.
+
+				  Here is your record of everything that has happened so far:
+				<REALITY STATE>
+					{reality_formatted}
+					<REALITY STATE END>
+				Within the broader context of reality, (physical space, psychological & social realm, culture, etc.), what details are pertinent to this agent in particular?
+				Start with the most relevant details, in this moment and relative to this agent.
+				Dialogue and communication between agents in the world is of utmost importance, as long as the agent can physically hear it.
+				Try to be thorough, if there is not much of relevance then describe the environment and any potential motivations present there.
+				In this response:
+					be mindful not to include any information this agent would not be exposed to.
+					use a third-person, removed, pragmatic voice.
+				<INSTRUCTION END>
+		divine
+			{primer}
+			<INSTRUCTION>
+				Here is your record of everything that has happened so far:
+				<REALITY STATE>
+					{reality_formatted}
+					<REALITY STATE END>
+				The independent agents of this world intend to act as follows:
+				<AGENTS INTENT>
+					{agents_intent}
+					<AGENTS INTENT>
+				Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information.
+				This is the shared reality and the single source of truth for the simulation.
+				<INSTRUCTION END>

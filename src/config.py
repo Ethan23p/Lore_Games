@@ -3,10 +3,10 @@ Central configuration for the Lore Games simulation.
 """
 
 # Simulation parameters
-LOGGING_ENABLED = True
-DEBUG_PRINTING_ENABLED = True
-FLOW = "simple"  # Can be "main" or "simple"
-MAX_TOKENS = 1536
+WRITE_TO_FILE = True
+PRINT_TO_CMD = True
+FLOW = "simple"  # Can be "full" or "simple"
+MAX_TOKENS = 556
 
 # Agent configuration
 AGENTS = [
