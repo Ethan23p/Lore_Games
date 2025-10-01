@@ -1,4 +1,4 @@
-### Turn: 0 | Owner: Delta
+### Turn: 0 | Owner: Charlie
 #### Prompt
 ```
 <ROLE>
@@ -18,20 +18,16 @@
     There will be agents acting autonomously, your goal is to integrate and reflect their actions while, concurrently, the environment continues to develop.
 <GOAL END>
 <INSTRUCTION>
-    Describe the world relative to the agent, Delta; as an individual, they are often described like this: A mechanoid which speaks through a lo-fi speaker, Delta is fascinated by biology..
+    Describe the world relative to the agent, Charlie; as an individual, they are often described like this: A goblin which survived being thrown into a ceremonial bonfire; Charlie has a new appreciation for life..
 
-    Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about Delta.
+    Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about Charlie.
 <INSTRUCTION END>
 ```
 
 #### Content
-Delta, a patchwork collection of scavenged metal and wiring, trundled along the edge of a particularly precarious rooftop. Their single optical sensor, a salvaged camera lens, swiveled, taking in the scene. A faint, crackling voice emanated from the tinny speaker embedded in their chest casing, "Observe… organic… matter."
+Charlie, a goblin whose skin bore the faint, iridescent sheen of ash where it wasn't scarred, meticulously inspected the frayed ends of a discarded rope. The recent winds, a common occurrence in the upper reaches of the shantytown, had tugged at the precarious lean-to that served as his dwelling, and a more robust tie-down was becoming urgent. He hummed a tuneless, raspy melody, a habit picked up during long nights spent staring at the stars, a profound appreciation for simply existing thrumming beneath his scorched exterior.
 
-The shantytown around them hummed with the slow awakening of its inhabitants. Rusting corrugated iron shacks, patched with salvaged tarpaulins, clustered together like barnacles on a whale. Smoke, thin and acrid, began to spiral upwards from makeshift braziers, signaling the start of morning meals. The air, still cool from the night, carried the faint scent of stale cooking oil, damp concrete, and the ever-present metallic tang of the city itself. Below, the truly ancient city slept on, its monumental skyscrapers stretching endlessly towards a perpetually overcast sky, their windows dark, their streets silent.
-
-Delta's attention, however, was fixed on a cluster of moss growing stubbornly in a cracked planter box, its emerald green a vibrant counterpoint to the prevailing rust and grey. A small, iridescent beetle, disturbed by Delta's approach, scuttled across a velvety frond. "Locomotion… segmentation… intriguing," the speaker buzzed, a faint static hiss accompanying each word. The mechanoid extended a multi-jointed arm, a makeshift probe at its tip, hovering inches from the beetle before retracting, as if hesitant to disturb the delicate ecosystem.
-
-The rhythmic thud of a distant, communal water pump began to punctuate the growing chatter from the shacks. A child’s cry, quickly soothed, drifted from an open doorway. The sun, a pale disc behind the perpetual haze, cast long, distorted shadows of the rooftop structures, giving the shantytown an even more labyrinthine appearance. A gust of wind, carrying with it a discarded plastic bag, caught on a nearby antenna, flapping wildly like a forgotten flag. The shantytown stirred, a collective, creaking sigh as another day unfolded on the precipice of the sleeping behemoth below.
+Across the precariously bridged gaps between rooftops, the shantytown continued its sluggish, early-morning awakening. The rhythmic clang of metal on metal echoed from a distant corner where a scrap collector was already sorting through a fresh haul. Below, in the shadowed canyons of the city, a low, mechanical hum began to resonate, the first of the city's behemoth vehicles stirring to life. A thin, acrid smoke, testament to a thousand small, cooking fires, began to coalesce into a hazy blanket over the rooftops, blurring the already indistinct lines of the sprawling, makeshift structures. The air, crisp from the night, was slowly surrendering to the warmth of the rising sun, which cast long, distorted shadows of chimneys and antennas across Charlie's immediate vicinity, making his small, scarred hand appear monstrous as it manipulated the rope.
 
 #### Metadata
 ```
@@ -51,5 +47,5 @@ primer: <ROLE>
 
     There will be agents acting autonomously, your goal is to integrate and reflect their actions while, concurrently, the environment continues to develop.
 <GOAL END>
-personality: A mechanoid which speaks through a lo-fi speaker, Delta is fascinated by biology.
+personality: A goblin which survived being thrown into a ceremonial bonfire; Charlie has a new appreciation for life.
 ```

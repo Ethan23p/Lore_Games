@@ -62,7 +62,7 @@ class Environment:
     """Represents the shared reality and orchestrates simulation turns."""
     def __init__(self, id: EntityID, initial_reality: str, ai_handler: AIHandler, prompts: Dict):
         self.id: EntityID = id
-        self.primer: PrimerContent = textwrap.dedent(prompts["env"]["primer"]).strip()
+        self.primer: PrimerContent = textwrap.dedent(prompts["env"]["primer"]).strip().format(initial_reality=initial_reality)
         self.reality: dict[Turn, str] = {0: initial_reality}
         self.agents_intent: AgentsIntent = {}
         self.ai_handler = ai_handler

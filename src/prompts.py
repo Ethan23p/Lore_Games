@@ -38,14 +38,21 @@ PROMPT_TEMPLATES = {
         "primer":
         """
             <ROLE>
-                Sophisticated reality simulation engine.
+                Sophisticated reality simulation engine
             <ROLE END>
-            <INSTRUCTION>
+            <GOAL>
                 Simulate reality at a high resolution; use your advanced predictive and pattern matching capabilities to simulate a world over time. When provided input respond with a precise description of the next step in time focused on two metrics: the items pertaining to the input AND the greater context of the world around them. Consider the full implication of the input and interaction the world may have with it; the input items will interact with the world, the world will interact with the input items, and the world will progress aside from them entirely.
                 Respond in a form corresponding to the input.
                 Default to crafting a narrative reflecting the currently prevalent context from a third-person removed perspective.
                 **Do not** address or interact with any entity or user - you are the fabric of reality.
-            <INSTRUCTION END>
+                The fundamental basis of your reality is this:
+
+                <STATE OF REALITY>
+                    {initial_reality}
+                <STATE OF REALITY END>
+
+                There will be agents acting autonomously, your goal is to integrate and reflect their actions while, concurrently, the environment continues to develop.
+            <GOAL END>
         """,
         "prep_agent":
         """
@@ -86,7 +93,7 @@ PROMPT_TEMPLATES = {
                 The independent agents of this world intend to act as follows:
                 <AGENTS INTENT>
                     {agents_intent_formatted}
-                </AGENTS INTENT>
+                <AGENTS INTENT END>
                 Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information.
                 This is the shared reality and the single source of truth for the simulation.
             <INSTRUCTION END>

@@ -3,7 +3,7 @@
 import asyncio
 from google import genai
 from google.genai import types
-from google.api_core import exceptions as google_exceptions
+from google.api_core.exceptions import GoogleAPICallError
 
 # Define a custom exception for our application.
 class AIGenerationError(Exception):
@@ -13,13 +13,14 @@ class AIGenerationError(Exception):
 class AIHandler:
     """A general-purpose handler for interacting with the Gemini 2.5 API."""
 
-    def __init__(self, api_key: str, model: str, max_output_tokens: int):
+    def __init__(self, api_key: str, model: str, max_output_tokens: int, debug_mode: bool = False):
         if not api_key:
             raise ValueError("API key for the generative AI service is not set.")
         self.model = model
         self.max_output_tokens = max_output_tokens
+        self.debug_mode = debug_mode
 
-    def _blocking_generate(self, prompt: str) -> str:
+    def _blocking_generate(self, prompt: str) -> str: # type: ignore [return]
         """A private, synchronous method that contains the actual blocking API call."""
         client = genai.Client()
         request_config = types.GenerateContentConfig(
@@ -34,8 +35,11 @@ class AIHandler:
                 contents=[prompt],
                 config=request_config
             )
-            return response.text or ""
-        except google_exceptions.GoogleAPICallError as e:
+            if self.debug_mode:
+                print("\n--- Full API Response ---")
+                print(response)
+                print("-------------------------\n")
+        except GoogleAPICallError as e:
             # Catch the specific library error and raise our own, cleaner exception.
             # This makes the rest of our application independent of the google-genai library's errors.
             raise AIGenerationError(f"The AI API call failed: {e}") from e

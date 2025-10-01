@@ -17,9 +17,14 @@ class LoreGamesApp:
 
     def __init__(self):
         self.config = get_config()
-        self.ai_handler = AIHandler(api_key=self.config["ai"]["api_key"], model=self.config["ai"]["model"], max_output_tokens=self.config["ai"]["max_output_tokens"])
+        self.ai_handler = AIHandler(
+            api_key=self.config["ai"]["api_key"],
+            model=self.config["ai"]["model"],
+            max_output_tokens=self.config["ai"]["max_output_tokens"],
+            debug_mode=self.config["simulation"]["debug_mode"]
+        )
         self.prompts = PROMPT_TEMPLATES
-        self.chronicle = Chronicle(base_path="state_dump")
+        self.chronicle = Chronicle(config=self.config["simulation"], base_path="state_dump")
         self.agents: Agents = {}
         self.environment: Optional[Environment] = None
         self.current_turn: Turn = 0
@@ -52,26 +57,24 @@ class LoreGamesApp:
         for agent in self.agents.values():
             initial_perspective = await self._execute_and_log(self.environment.initial_reflection(agent, self.current_turn))
             agent.prime(initial_perspective)
-            print(f"Primed {agent.id}.")
         print("---------------------------------")
 
     async def _execute_turn(self):
         assert self.environment is not None
         self.current_turn += 1
         print(f"\n--- Starting Turn {self.current_turn} ---")
-        print(f"Reality: {self.environment.reality.get(self.current_turn - 1)}")
+        reality_str = self.environment.reality.get(self.current_turn - 1, "")
+        print(f"Reality: \"{reality_str[:80].strip()}...\"")
         for agent in self.agents.values():
             perspective = await self._execute_and_log(self.environment.reflect(agent, self.current_turn))
             agent.add_memory(self.current_turn, perspective)
-            print(f"{agent.id} perceives: \"{perspective.content[:80].strip()}...\"")
             intention = await self._execute_and_log(agent.intent(self.current_turn))
             self.environment.add_intention(agent.id, intention)
-            print(f"{agent.id} intends: \"{intention.content[:80].strip()}...\"")
         divination = await self._execute_and_log(self.environment.divine(self.current_turn))
         self.environment.reality[self.current_turn] = divination.content
+        # Create and log the final reality object for the turn
         final_reality = Reality(owner=self.environment.id, turn_origin=self.current_turn, content=divination.content)
         self.chronicle.log(final_reality)
-        print(f"\nNew Reality: {divination.content}")
         print("--- End of Turn ---")
 
     async def run(self):

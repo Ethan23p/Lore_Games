@@ -2,74 +2,135 @@
 
 import os
 from functools import singledispatchmethod
-from dataclasses import fields, is_dataclass
+from dataclasses import fields
+from typing import Dict, Any
 from lore_types import (
     BaseAIInteraction, InitialPerspective, Perspective, Intention, Divination, Reality
 )
 
 class Chronicle:
-    """Handles the logging of simulation state to disk."""
+    """Handles the logging of simulation state to disk and console."""
 
-    def __init__(self, base_path: str = "state_dump"):
+    def __init__(self, config: Dict[str, Any], base_path: str = "state_dump"):
         self.base_path = base_path
-        os.makedirs(self.base_path, exist_ok=True)
+        self.should_write_file = config.get("write_to_file", False)
+        self.should_print_cmd = config.get("print_to_cmd", False)
+        if self.should_write_file:
+            os.makedirs(self.base_path, exist_ok=True)
 
-    def _write_file(self, turn: int, filename: str, content: str):
-        """Helper to write content to a turn-specific directory."""
-        turn_dir = os.path.join(self.base_path, f"turn_{turn:03d}")
-        os.makedirs(turn_dir, exist_ok=True)
-        with open(os.path.join(turn_dir, filename), 'w', encoding='utf-8') as f:
-            f.write(content)
+    # --- Console Formatting ---
 
     @singledispatchmethod
-    def log(self, interaction: object, **kwargs):
-        """Generic logger for unknown types."""
-        print(f"Warning: No specific chronicle logger for type {type(interaction)}")
+    def _format_for_console(self, interaction: object) -> str | None:
+        """Returns a single-line, truncated string for console output."""
+        return None # Default to no console output
 
-    @log.register
-    def _(self, interaction: InitialPerspective):
-        filename = f"{interaction.owner}_initial_perspective.md"
-        self._log_standard_interaction(interaction, filename)
+    @_format_for_console.register
+    def _(self, interaction: InitialPerspective) -> str:
+        return f"Primed {interaction.owner}."
 
-    @log.register
-    def _(self, interaction: Perspective):
-        filename = f"{interaction.owner}_perspective.md"
-        self._log_standard_interaction(interaction, filename)
+    @_format_for_console.register
+    def _(self, interaction: Perspective) -> str:
+        return f"{interaction.owner} perceives: \"{interaction.content[:80].strip()}...\""
 
-    @log.register
-    def _(self, interaction: Intention):
-        filename = f"{interaction.owner}_intention.md"
-        self._log_standard_interaction(interaction, filename)
+    @_format_for_console.register
+    def _(self, interaction: Intention) -> str:
+        return f"{interaction.owner} intends: \"{interaction.content[:80].strip()}...\""
 
-    @log.register
-    def _(self, interaction: Divination):
-        filename = f"{interaction.owner}_divination.md"
-        self._log_standard_interaction(interaction, filename)
+    @_format_for_console.register
+    def _(self, interaction: Reality) -> str:
+        return f"\nNew Reality: \"{interaction.content[:80].strip()}...\""
 
-    @log.register
-    def _(self, interaction: Reality):
-        filename = "reality.md"
-        header = f"### Turn: {interaction.turn_origin} | Final Reality\n\n"
-        self._write_file(interaction.turn_origin, filename, header + interaction.content)
+    # --- File Formatting ---
 
-    def _log_standard_interaction(self, interaction: BaseAIInteraction, filename: str):
-        """A standardized formatter for most interaction types."""
+    def _format_for_file(self, interaction: BaseAIInteraction, filename: str, title: str):
+        """A standardized formatter for creating full markdown file content."""
         # Header
-        header = f"### Turn: {interaction.turn_origin} | Owner: {interaction.owner}\n"
+        owner_part = f" | Owner: {interaction.owner}" if hasattr(interaction, 'owner') else ""
+        header = f"### Turn: {interaction.turn_origin} | {title}{owner_part}\n"
 
-        # Prioritize prompt and content
-        prompt_section = f"#### Prompt\n```\n{interaction.prompt}\n```\n\n" if interaction.prompt else ""
+        # Content section is always present
         content_section = f"#### Content\n{interaction.content}\n\n"
+
+        # Prompt section is conditional
+        prompt_section = ""
+        if hasattr(interaction, 'prompt') and interaction.prompt:
+            prompt_section = f"#### Prompt\n```\n{interaction.prompt}\n```\n\n"
 
         # Metadata for all other fields
         metadata_section = "#### Metadata\n```\n"
+        has_metadata = False
         for f in fields(interaction):
-            if f.name not in ['prompt', 'content', 'owner', 'turn_origin', 'template_key']:
+            excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key'}
+            if f.name not in excluded_fields:
                 value = getattr(interaction, f.name)
-                metadata_section += f"{f.name}: {value}\n"
+                if value:
+                    has_metadata = True
+                    metadata_section += f"{f.name}: {value}\n"
         metadata_section += "```\n"
 
-        full_content = (
-            header + prompt_section + content_section + metadata_section
+        return (
+            header + prompt_section + content_section + (metadata_section if has_metadata else "")
         )
-        self._write_file(interaction.turn_origin, filename, full_content)
+
+    # --- Main Logger ---
+
+    @singledispatchmethod
+    def log(self, interaction: object):
+        """Generic logger for unknown types."""
+        print(f"Warning: No specific chronicle logger for type {type(interaction)}")
+
+    def _process_log(self, interaction, filename: str, title: str):
+        """Central handler for console and file output."""
+        if self.should_print_cmd:
+            console_output = self._format_for_console(interaction)
+            if console_output:
+                print(console_output)
+        if self.should_write_file:
+            file_content = self._format_for_file(interaction, filename, title)
+            turn_dir = os.path.join(self.base_path, f"turn_{interaction.turn_origin:03d}")
+            os.makedirs(turn_dir, exist_ok=True)
+            with open(os.path.join(turn_dir, filename), 'w', encoding='utf-8') as f:
+                f.write(file_content)
+
+    @log.register
+    def _(self, interaction: InitialPerspective):
+        self._process_log(
+            interaction,
+            filename=f"{interaction.owner}_initial_perspective.md",
+            title="Initial Perspective"
+        )
+
+    @log.register
+    def _(self, interaction: Perspective):
+        self._process_log(
+            interaction,
+            filename=f"{interaction.owner}_perspective.md",
+            title="Perspective"
+        )
+
+    @log.register
+    def _(self, interaction: Intention):
+        self._process_log(
+            interaction,
+            filename=f"{interaction.owner}_intention.md",
+            title="Intention"
+        )
+
+    @log.register
+    def _(self, interaction: Divination):
+        # Divination is internal, so we only write it to a file if specified.
+        if self.should_write_file:
+            self._process_log(
+                interaction,
+                filename=f"{interaction.owner}_divination.md",
+                title="Divination"
+            )
+
+    @log.register
+    def _(self, interaction: Reality):
+        self._process_log(
+            interaction,
+            filename="reality.md",
+            title="Final Reality"
+        )
