@@ -1,5 +1,4 @@
-# prompts.py
-
+# pyright: reportGeneralTypeIssues=false
 """
 This file contains the prompt templates for the Lore Games simulation.
 """
@@ -10,11 +9,11 @@ PROMPT_TEMPLATES = {
         "primer":
         """
             <ROLE>
-                You are {owner}, you are described like this: {personality}.
+                You are {id}, you are described like this: {personality}.
 
                 You recall your earlier perspective:
 
-                {initial_perspective}.
+                {perspective}.
             <ROLE END>
         """,
         "intent":
@@ -23,14 +22,8 @@ PROMPT_TEMPLATES = {
             <PROMPT>
                 You recall everything that has happened so far:
                 <MEMORY>
-                    {formatted_memory}
+                    {memory_formatted}
                 <MEMORY END>
-                You mentally process everything that has happened...
-                Now you must decide and describe what you do next.
-                Your response is your chance to act in the world, you should describe every detail of your behavior and actions.
-                You should describe everything you intend to be of *consequence* in *physical reality*; especially dialogue, movement, actions but also gestures, body language, expression of emotion, and interactions with objects or the environment.
-                Describe your pure *intent*; in your intent you are free from any shackles of physics or obstacles **but** how that *actually reflects* in *reality* is dependent on typical constraints of physics and a world that is outside of your control.
-                What do you intend to do in this very next moment?
             <PROMPT END>
         """
     },
@@ -51,16 +44,16 @@ PROMPT_TEMPLATES = {
         """
             {primer}
             <INSTRUCTION>
-                Describe the world relative to the agent, {owner}; as an individual, they are often described like this: {personality}.
+                Describe the world relative to the agent, {agent.id}; as an individual, they are often described like this: {personality}.
 
-                Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about {owner}.
+                Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about {agent.id}.
             <INSTRUCTION END>
         """,
         "reflect":
         """
             {primer}
             <INSTRUCTION>
-                Detail the *current* state of reality as it pertains, in particular, to the agent, {owner}. As an individual, they are often described like this: {personality}.
+                Detail the *current* state of reality as it pertains, in particular, to the agent, {agent.id}. As an individual, they are often described like this: {personality}.
 
                 Here is your record of everything that has happened so far:
                 <REALITY STATE>
@@ -81,12 +74,12 @@ PROMPT_TEMPLATES = {
             <INSTRUCTION>
                 Here is your record of everything that has happened so far:
                 <REALITY STATE>
-                    {reality_state}
+                    {reality_formatted}
                 <REALITY STATE END>
                 The independent agents of this world intend to act as follows:
                 <AGENTS INTENT>
-                    {agents_intent_formatted}
-                </AGENTS INTENT>
+                    {agents_intent}
+                </AENTS INTENT>
                 Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information.
                 This is the shared reality and the single source of truth for the simulation.
             <INSTRUCTION END>

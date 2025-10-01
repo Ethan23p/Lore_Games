@@ -1,12 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "lore-games"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "A multi-agent simulation engine for emergent narrative."
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "fast-agent-mcp",
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Ethan", email = "Contact@EthanPorter.xyz" }
 ]
+keywords = ["ai", "simulation", "multi-agent", "emergent narrative", "generative ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "google-genai",
+]
+
+[project.urls]
 
 [project.optional-dependencies]
 test = [
