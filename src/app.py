@@ -7,7 +7,7 @@ from config import get_config
 from ai_handler import AIHandler
 from lore_types import Agents, Turn, BaseInteraction, Reality
 from entities import Agent, Environment
-from prompts import PROMPT_TEMPLATES
+from prompts import PromptRenderer
 from chronicle import Chronicle
 
 T = TypeVar('T', bound=BaseInteraction)
@@ -23,7 +23,7 @@ class LoreGamesApp:
             max_output_tokens=self.config["ai"]["max_output_tokens"],
             debug_mode=self.config["simulation"]["debug_mode"]
         )
-        self.prompts = PROMPT_TEMPLATES
+        self.renderer = PromptRenderer()
         self.chronicle = Chronicle(config=self.config["simulation"], base_path="state_dump")
         self.agents: Agents = {}
         self.environment: Optional[Environment] = None
@@ -32,11 +32,11 @@ class LoreGamesApp:
     def setup(self):
         self.chronicle.log_setup_start()
         for name, agent_config in self.config["initial_agents"].items():
-            new_agent = Agent(id=name, personality=agent_config["personality"], ai_handler=self.ai_handler, prompts=self.prompts)
+            new_agent = Agent(id=name, personality=agent_config["personality"], ai_handler=self.ai_handler, renderer=self.renderer)
             self.agents[name] = new_agent
             self.chronicle.log_agent_creation(name)
         env_config = self.config["environment"]
-        self.environment = Environment(id=env_config["id"], initial_reality=env_config["initial_reality"], ai_handler=self.ai_handler, prompts=self.prompts)
+        self.environment = Environment(id=env_config["id"], initial_reality=env_config["initial_reality"], ai_handler=self.ai_handler, renderer=self.renderer)
         self.chronicle.log_environment_creation(self.environment.id)
         self.chronicle.log_setup_end()
 
@@ -63,7 +63,16 @@ class LoreGamesApp:
         divination = await self.chronicle.execute_and_log(self.environment.divine(self.current_turn))
         self.environment.reality[self.current_turn] = divination.content
 
-        final_reality = Reality(owner=self.environment.id, turn_origin=self.current_turn, content=divination.content)
+        reality_history_for_log = "\n\n---\n\n".join(
+            f"### Turn {t}\n\n{r}" for t, r in sorted(self.environment.reality.items())
+        )
+
+        final_reality = Reality(
+            owner=self.environment.id, 
+            turn_origin=self.current_turn, 
+            content=divination.content,
+            full_history=reality_history_for_log
+        )
         self.chronicle.log(final_reality)
         self.chronicle.log_turn_end()
 

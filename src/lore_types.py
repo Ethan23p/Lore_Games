@@ -28,6 +28,7 @@ class BaseInteraction:
 @dataclass(frozen=True, kw_only=True)
 class Reality(BaseInteraction):
     content: str
+    full_history: str
 
 @dataclass(frozen=True, kw_only=True)
 class BaseAIInteraction(BaseInteraction):

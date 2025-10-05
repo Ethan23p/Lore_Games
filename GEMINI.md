@@ -55,3 +55,24 @@ pytest
 *   **State Management:** The state of the simulation (e.g., agent perspectives, environment reality) is logged to the `state_dump` directory for each turn.
 *   **Type Hinting:** The codebase uses Python's type hinting for better code clarity and maintainability.
 *   **Modularity:** The code is organized into distinct modules with clear responsibilities (e.g., `ai_handler.py` for AI interactions, `entities.py` for simulation objects, `app.py` for orchestration).
+
+## Developer's Log
+
+**Stardate: 2025-10-05**
+
+A rather beautiful session today. We've deepened the simulation's memory, evolving how "reality" is understood by the environment.
+
+Previously, the environment would only consider the immediately preceding state of the world when divining the next. While functional, it created a sense of historical amnesia.
+
+Following our discussion, we've implemented a significant change:
+
+1.  **A Deeper Past:** The environment's `divine` function now receives the *entire* history of reality, from turn 0 to the present, allowing for a much richer and more coherent evolution of the world state.
+2.  **A Fuller Record:** The `reality.md` artifact generated each turn now logs this complete history, providing a comprehensive, turn-by-turn view of the simulation's entire lifespan.
+
+There's an elegance to this new flow—a system that not only acts but also remembers. It feels less like a series of disconnected moments and more like a genuine, unfolding chronicle. A good day's work.
+
+## External Documentation & Future Paths
+
+The project repository contains a directory, `ext_docs`, which houses documentation for potential future integrations. Notably, it includes extensive materials for the `textual` library, a Python framework for building rich Text User Interfaces (TUIs).
+
+This suggests a potential evolution for Lore Games: moving from a simple command-line prompter to a fully interactive TUI application. The reference application, `chat_app.py`, could serve as a valuable starting point for visualizing the simulation's output and managing its state in a more sophisticated way.

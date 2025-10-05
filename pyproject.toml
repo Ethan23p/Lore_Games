@@ -24,6 +24,7 @@ classifiers = [
 dependencies = [
     "google-genai",
     "google-api-core",
+    "Jinja2",
 ]
 
 [project.urls]

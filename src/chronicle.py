@@ -102,10 +102,15 @@ class Chronicle:
         """A standardized formatter for creating full markdown file content."""
         # Header
         owner_part = f" | Owner: {interaction.owner}" if hasattr(interaction, 'owner') else ""
-        header = f"### Turn: {interaction.turn_origin} | {title}{owner_part}\n"
+        header = f"### Turn: {interaction.turn_origin} | {title}{owner_part}\n\n"
 
         # Content section is always present
-        content_section = f"#### Content\n{interaction.content or 'None'}\n\n"
+        display_content = ""
+        if hasattr(interaction, 'full_history') and interaction.full_history:
+            display_content = interaction.full_history
+        else:
+            display_content = interaction.content or 'None'
+        content_section = f"#### Content\n{display_content}\n\n"
 
         # Prompt section is conditional
         prompt_section = ""
@@ -116,15 +121,12 @@ class Chronicle:
         metadata_section = "#### Metadata\n"
         has_metadata = False
         for f in fields(interaction):
-            excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key'}
+            excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key', 'full_history'}
             if f.name not in excluded_fields:
                 value = getattr(interaction, f.name)
                 if value:
                     has_metadata = True
-                    metadata_section += f"- **{f.name}**: {value}\n"
-        
-        if has_metadata:
-            metadata_section += "\n"
+                    metadata_section += f"- **{f.name}**:\n{value}\n\n"
 
         return (
             header + prompt_section + content_section + (metadata_section if has_metadata else "")

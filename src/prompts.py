@@ -11,22 +11,22 @@ PROMPT_TEMPLATES = {
         """
             <ROLE>
 
-                You are {owner}, you are described like this: {personality}
+                You are {{ owner }}, you are described like this: {{ personality }}
 
                 You recall your earlier perspective:
 
-                {initial_perspective}
+                {{ initial_perspective }}
 
             <ROLE END>
 
         """,
         "intent":
         """
-            {primer}
-            <PROMPT>
+            {{ primer }}
+            <INSTRUCTION>
                 You recall everything that has happened so far:
                 <MEMORY>
-                    {formatted_memory}
+                    {{ formatted_memory }}
                 <MEMORY END>
 
                 You mentally process everything that has happened...
@@ -36,7 +36,13 @@ PROMPT_TEMPLATES = {
                 You should describe everything you intend to be of *consequence* in *physical reality*; especially dialogue, movement, actions but also gestures, body language, expression of emotion, and interactions with objects or the environment.
                 Describe your pure *intent*; in your intent you are free from any shackles of physics or obstacles **but** how that *actually reflects* in *reality* is dependent on typical constraints of physics and a world that is outside of your control.
                 What do you intend to do in this next moment?
-            <PROMPT END>
+                <YOUR RESPONSE>
+                    {{ PROMPT_META.length.short }}
+                <YOUR RESPONSE END>
+
+                Now you must decide and describe what you do next.
+                Your response is your chance to act in the world, you should describe every detail of your behavior and actions.
+            <INSTRUCTION END>
 
         """
     },
@@ -56,33 +62,39 @@ PROMPT_TEMPLATES = {
                 The fundamental basis of your reality is this:
 
                 <INITIAL REALITY>
-                    {initial_reality}
+                    {{ initial_reality }}
                 <INITIAL REALITY END>
 
                 There will be agents acting autonomously, your goal is to integrate and reflect their actions while, concurrently, the environment continues to develop.
+                Respond with a **precise description of the next step in time**.
             <GOAL END>
 
         """,
         "prep_agent":
         """
-            {primer}
+            {{ primer }}
             <INSTRUCTION>
-                Describe the world relative to the agent, {owner}; as an individual, they are often described like this: {personality}
+                Describe the world relative to the agent, {{ owner }}; as an individual, they are often described like this: {{ personality }}
 
-                This step is the birth of the character, so focus on them entirely and give them a rich context to exist within; focus on flavor over narrative or setting.
-                Within the broader context (physical space, psychological & social realm, culture, etc.), invent some concrete details and context around and about {owner}.
+                This step is the conception of the character, pre-existing within their context, so focus on them entirely and give them a rich context to exist within; **focus on flavor over narrative or setting.**
+                Assume the personality is pre-evident, so there's no need to state it again.
+                Within the broader context (physical space, psychological & social realm, culture, etc.), **invent some concrete details and context around and about {{ owner }}**.
+                <YOUR RESPONSE>
+                    {{ PROMPT_META.length.short }}
+                <YOUR RESPONSE END>
+
             <INSTRUCTION END>
 
         """,
         "reflect":
         """
-            {primer}
+            {{ primer }}
             <INSTRUCTION>
-                Detail the *current* state of reality as it pertains, in particular, to the agent, {owner}. As an individual, they are often described like this: {personality}
+                Detail the *current* state of reality as it pertains, in particular, to the agent, {{ owner }}. As an individual, they are often described like this: {{ personality }}
 
                 Here is your record of everything that has happened so far:
                 <REALITY STATE>
-                    {reality_formatted}
+                    {{ reality_formatted }}
                 <REALITY STATE END>
 
                 Within the broader context of reality, (physical space, psychological & social realm, culture, etc.), what details are pertinent to this agent in particular?
@@ -92,36 +104,82 @@ PROMPT_TEMPLATES = {
                 In this response:
                 be mindful not to include any information this agent would not be exposed to.
                 use a third-person, removed, pragmatic voice.
+                <YOUR RESPONSE>
+                    {{ PROMPT_META.length.short }}
+                <YOUR RESPONSE END>
+
+                Within the broader context of reality, (physical space, psychological & social realm, culture, etc.), **what details are pertinent to this agent in particular?**
             <INSTRUCTION END>
 
         """,
         "divine":
         """
-            {primer}
+            {{ primer }}
             <INSTRUCTION>
                 Here is your record of everything that has happened so far:
                 <REALITY STATE>
-                    {reality_state}
+                    {{ reality_state }}
                 <REALITY STATE END>
 
                 The independent agents of this world intend to act as follows:
                 <AGENTS INTENT>
-                    {agents_intent_formatted}
+                    {{ agents_intent_formatted }}
                 <AGENTS INTENT END>
 
-                Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information.
+                Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information. Aim to resolve the agent's intents, when appropriate.
                 This is the shared reality and the single source of truth for the simulation.
+                <YOUR RESPONSE>
+                    {{ PROMPT_META.length.mid }}
+                <YOUR RESPONSE END>
+
+                Decide and detail how the *state of reality* and *agent's intents* will have impact: **the effects, outcomes, results, and any relevant contextual information.** Aim to resolve the agent's intents, when appropriate.
             <INSTRUCTION END>
 
         """
-    },
-    "meta":
-    {
-        "length":
-        {
-            "short": " In your response, be brief and use dense verbiage. Aim for around two sentences length.",
-            "mid": " In your response, be moderately detailed. Aim for around a paragraph length.",
-            "long": " In your response, be thorough and expansive. A few paragraphs is appropriate.",
-        }
     }
 }
+PROMPT_META = {
+    "length":
+    {
+        "short":
+        """
+            In your response, be brief and use dense verbiage. Aim for around two sentences length.
+        """,
+        "mid":
+        """
+            In your response, be moderately detailed. Aim for around a paragraph length.
+        """,
+        "long":
+        """
+            In your response, be thorough and expansive. A few paragraphs is appropriate.
+        """,
+    }
+}
+
+import jinja2
+
+class PromptRenderer:
+    def __init__(self):
+        # We need to flatten the templates dict for DictLoader
+        templates = {
+            f"{key1}/{key2}": template
+            for key1, sub_dict in PROMPT_TEMPLATES.items()
+            for key2, template in sub_dict.items()
+        }
+        self.env = jinja2.Environment(
+            loader=jinja2.DictLoader(templates),
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
+
+    def render(self, template_key: str, **context) -> str:
+        """
+        Renders a prompt template with the given context.
+        """
+        template_name = template_key.replace('.', '/')
+        template = self.env.get_template(template_name)
+
+        # Explicitly add PROMPT_META to the context for rendering
+        context['PROMPT_META'] = PROMPT_META
+
+        return template.render(**context)

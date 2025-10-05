@@ -9,22 +9,17 @@ from lore_types import (
     EntityID, Personality, Memory, Turn, Intention, InitialPerspective,
     Perspective, Divination, PrimerContent, AgentsIntent
 )
-
-def _format_prompt(prompts: Dict, template_key: str, data: Any) -> str:
-    """A helper utility to format a prompt from the templates dictionary."""
-    key1, key2 = template_key.split('.')
-    template = prompts[key1][key2]
-    return textwrap.dedent(template).strip().format(**data.__dict__)
+from prompts import PromptRenderer
 
 class Agent:
     """Represents an autonomous entity that can perceive, reason, and act."""
-    def __init__(self, id: EntityID, personality: Personality, ai_handler: AIHandler, prompts: Dict):
+    def __init__(self, id: EntityID, personality: Personality, ai_handler: AIHandler, renderer: PromptRenderer):
         self.id: EntityID = id
         self.personality: Personality = personality
         self.primer: PrimerContent = ""
         self.memory: Memory = {}
         self.ai_handler = ai_handler
-        self.prompts = prompts
+        self.renderer = renderer
 
     def prime(self, initial_perspective: InitialPerspective) -> None:
         """Generates and stores the agent's foundational primer."""
@@ -50,7 +45,11 @@ class Agent:
             formatted_memory=formatted_memory,
             content=""
         )
-        prompt = _format_prompt(self.prompts, request.template_key, request)
+        prompt = self.renderer.render(
+            request.template_key,
+            primer=request.primer,
+            formatted_memory=request.formatted_memory
+        )
         response = await self.ai_handler.generate(prompt)
         return replace(request, content=response, prompt=prompt)
 
@@ -60,13 +59,16 @@ class Agent:
 
 class Environment:
     """Represents the shared reality and orchestrates simulation turns."""
-    def __init__(self, id: EntityID, initial_reality: str, ai_handler: AIHandler, prompts: Dict):
+    def __init__(self, id: EntityID, initial_reality: str, ai_handler: AIHandler, renderer: PromptRenderer):
         self.id: EntityID = id
-        self.primer: PrimerContent = textwrap.dedent(prompts["env"]["primer"]).strip().format(initial_reality=initial_reality)
         self.reality: dict[Turn, str] = {0: initial_reality}
         self.agents_intent: AgentsIntent = {}
         self.ai_handler = ai_handler
-        self.prompts = prompts
+        self.renderer = renderer
+        self.primer: PrimerContent = self.renderer.render(
+            "env.primer",
+            initial_reality=initial_reality
+        )
 
     async def initial_reflection(self, agent: "Agent", turn_current: Turn) -> InitialPerspective:
         """Generates an agent's first look at the world."""
@@ -77,7 +79,12 @@ class Environment:
             personality=agent.personality,
             content=""
         )
-        prompt = _format_prompt(self.prompts, request.template_key, request)
+        prompt = self.renderer.render(
+            request.template_key,
+            primer=request.primer,
+            owner=request.owner,
+            personality=request.personality
+        )
         response = await self.ai_handler.generate(prompt)
         return replace(request, content=response, prompt=prompt)
 
@@ -92,7 +99,13 @@ class Environment:
             reality_formatted=current_reality,
             content=""
         )
-        prompt = _format_prompt(self.prompts, request.template_key, request)
+        prompt = self.renderer.render(
+            request.template_key,
+            primer=request.primer,
+            owner=request.owner,
+            personality=request.personality,
+            reality_formatted=request.reality_formatted
+        )
         response = await self.ai_handler.generate(prompt)
         return replace(request, content=response, prompt=prompt)
 
@@ -102,7 +115,9 @@ class Environment:
 
     async def divine(self, current_turn: Turn) -> Divination:
         """Interprets intentions and produces the next state of reality."""
-        reality_state = self.reality.get(current_turn - 1, "A formless void.")
+        reality_state = "\n\n".join(
+            f"### Turn {t}\n\n{r}" for t, r in sorted(self.reality.items())
+        )
         agents_intent_formatted = "\n".join(
             f"Agent {id}'s intention: {intent.content}" for id, intent in self.agents_intent.items()
         )
@@ -114,6 +129,11 @@ class Environment:
             agents_intent_formatted=agents_intent_formatted,
             content=""
         )
-        prompt = _format_prompt(self.prompts, request.template_key, request)
+        prompt = self.renderer.render(
+            request.template_key,
+            primer=request.primer,
+            reality_state=request.reality_state,
+            agents_intent_formatted=request.agents_intent_formatted
+        )
         response = await self.ai_handler.generate(prompt)
         return replace(request, content=response, prompt=prompt)
