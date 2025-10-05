@@ -32,14 +32,14 @@ def get_config() -> Dict[str, Any]:
             "flow": "simple",
         },
         "ai": {
-            "max_output_tokens": 20,
+            "max_output_tokens": 128,
             "api_key": os.environ.get("GEMINI_API_KEY"),
             "model": "gemini-2.5-flash", # 2.5 is absolutely intentional, don't change it.
         },
         "initial_agents": INITIAL_AGENTS,
         "environment": {
             "id": "environment",
-            "initial_reality": "A sprawling shantytown built on the interconnected rooftops of a sleeping city.",
+            "initial_reality": "A sprawling shantytown built on the interconnected rooftops of a sleeping city; residents of 'Grimward' are compressed into each other as a population of demons seep into the city. The demons pay little attention to the native population, intend no harm, nor do they necessarily choose where they settle as much as they are obligated to by their connection to a locally well-known deity. Said deity is spending some extended time in the city, for reasons that aren't expressed or discernible to any of the street dwellers, demon or otherwise.",
         },
     }
 

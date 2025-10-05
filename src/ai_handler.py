@@ -39,6 +39,7 @@ class AIHandler:
                 print("\n--- Full API Response ---")
                 print(response)
                 print("-------------------------\n")
+            return response.text or ""
         except GoogleAPICallError as e:
             # Catch the specific library error and raise our own, cleaner exception.
             # This makes the rest of our application independent of the google-genai library's errors.
