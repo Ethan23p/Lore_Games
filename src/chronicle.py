@@ -33,7 +33,7 @@ class Chronicle:
 
     def _create_banner(self, text: str) -> str:
         """Creates a single-line banner for console output."""
-        return f"================== {text} =================="
+        return f"\n================== {text} =================="
 
     # --- Simulation Event Logging ---
 
@@ -43,32 +43,32 @@ class Chronicle:
 
     def log_setup_end(self):
         if self.should_print_cmd:
-            print("-----------------------------")
+            print("\n-----------------------------")
 
     def log_agent_creation(self, agent_name: str):
         if self.should_print_cmd:
-            print(f"Created agent: {agent_name}")
+            print(f"\nCreated agent: {agent_name}")
 
     def log_environment_creation(self, env_id: str):
         if self.should_print_cmd:
-            print(f"Created environment: {env_id}")
+            print(f"\nCreated environment: {env_id}")
 
     def log_priming_start(self):
         if self.should_print_cmd:
-            print(self._create_banner("PRIMING AGENTS (TURN 0)"))
+            print(self._create_banner("\nPRIMING AGENTS (TURN 0)\n"))
 
     def log_priming_end(self):
         if self.should_print_cmd:
-            print("---------------------------------")
+            print("\n---------------------------------\n")
 
     def log_turn_start(self, turn_number: int, reality: str):
         if self.should_print_cmd:
             print(self._create_banner(f"TURN {turn_number}"))
-            print(f'Reality: "{reality[:80].strip()}..."')
+            print(f'\nReality: "{reality[:80].strip()}..."\n')
 
     def log_turn_end(self):
         if self.should_print_cmd:
-            print("--- End of Turn ---")
+            print("\n--- End of Turn ---\n")
 
     # --- Console Formatting ---
 
@@ -79,22 +79,22 @@ class Chronicle:
 
     @_format_for_console.register
     def _(self, interaction: InitialPerspective) -> str:
-        return f"\nPrimed {interaction.owner}."
+        return f"\nPrimed {interaction.owner}.\n"
 
     @_format_for_console.register
     def _(self, interaction: Perspective) -> str:
         content_str = interaction.content or ""
-        return f'\n{interaction.owner} perceives: "{content_str[:80].strip()}..."'
+        return f'\n{interaction.owner} perceives: "\n{content_str[:80].strip()}..."\n'
 
     @_format_for_console.register
     def _(self, interaction: Intention) -> str:
         content_str = interaction.content or ""
-        return f'\n{interaction.owner} intends: "{content_str[:80].strip()}..."'
+        return f'\n{interaction.owner} intends: "\n{content_str[:80].strip()}..."\n'
 
     @_format_for_console.register
     def _(self, interaction: Reality) -> str:
         content_str = interaction.content or ""
-        return f'\nNew Reality: "{content_str[:80].strip()}..."'
+        return f'\nNew Reality: "\n{content_str[:80].strip()}..."\n'
 
     # --- File Formatting ---
 
@@ -110,15 +110,15 @@ class Chronicle:
             display_content = interaction.full_history
         else:
             display_content = interaction.content or 'None'
-        content_section = f"#### Content\n{display_content}\n\n"
+        content_section = f"\n#### Content\n\n{display_content}\n\n"
 
         # Prompt section is conditional
         prompt_section = ""
         if hasattr(interaction, 'prompt') and interaction.prompt:
-            prompt_section = f"#### Prompt\n```\n{interaction.prompt}\n```\n\n"
+            prompt_section = f"\n#### Prompt\n\n>{interaction.prompt}\n\n"
 
         # Metadata for all other fields
-        metadata_section = "#### Metadata\n"
+        metadata_section = "\n#### Metadata\n\n"
         has_metadata = False
         for f in fields(interaction):
             excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key', 'full_history'}
@@ -126,7 +126,7 @@ class Chronicle:
                 value = getattr(interaction, f.name)
                 if value:
                     has_metadata = True
-                    metadata_section += f"- **{f.name}**:\n{value}\n\n"
+                    metadata_section += f"\n- **{f.name}**:\n{value}\n\n"
 
         return (
             header + prompt_section + content_section + (metadata_section if has_metadata else "")
