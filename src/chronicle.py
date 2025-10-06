@@ -18,6 +18,7 @@ class Chronicle:
         self.base_path = base_path
         self.should_write_file = config.get("write_to_file", False)
         self.should_print_cmd = config.get("print_to_cmd", False)
+        self.debug_mode = config.get("debug_mode", False)
         if self.should_write_file:
             os.makedirs(self.base_path, exist_ok=True)
 
@@ -112,25 +113,26 @@ class Chronicle:
             display_content = interaction.content or 'None'
         content_section = f"\n#### Content\n\n{display_content}\n\n"
 
-        # Prompt section is conditional
+        # Prompt section is now always included if available
         prompt_section = ""
         if hasattr(interaction, 'prompt') and interaction.prompt:
             prompt_section = f"\n#### Prompt\n\n>{interaction.prompt}\n\n"
 
-        # Metadata for all other fields
-        metadata_section = "\n#### Metadata\n\n"
-        has_metadata = False
-        for f in fields(interaction):
-            excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key', 'full_history'}
-            if f.name not in excluded_fields:
-                value = getattr(interaction, f.name)
-                if value:
-                    has_metadata = True
-                    metadata_section += f"\n- **{f.name}**:\n{value}\n\n"
+        # Metadata section is conditional on debug_mode
+        metadata_section = ""
+        if self.debug_mode:
+            metadata_fields = []
+            for f in fields(interaction):
+                excluded_fields = {'prompt', 'content', 'owner', 'turn_origin', 'template_key', 'full_history'}
+                if f.name not in excluded_fields:
+                    value = getattr(interaction, f.name)
+                    if value:
+                        metadata_fields.append(f"\n- **{f.name}**:\n{value}\n\n")
+            
+            if metadata_fields:
+                metadata_section = "\n#### Metadata\n\n" + "".join(metadata_fields)
 
-        return (
-            header + prompt_section + content_section + (metadata_section if has_metadata else "")
-        )
+        return header + content_section + prompt_section + metadata_section
 
     # --- Main Logger ---
 
