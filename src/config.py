@@ -39,8 +39,9 @@ def get_config() -> Dict[str, Any]:
         "initial_agents": INITIAL_AGENTS,
         "environment": {
             "id": "environment",
-            "initial_reality": "A sprawling shantytown built on the interconnected rooftops of a sleeping city; residents of 'Grimward' are compressed into each other as a population of demons seep into the city. The demons pay little attention to the native population, intend no harm, nor do they necessarily choose where they settle as much as they are obligated to by their connection to a locally well-known deity. Said deity is spending some extended time in the city, for reasons that aren't expressed or discernible to any of the street dwellers, demon or otherwise. On this rooftop, partially in shade and partially exposed to the sun, is a small collection of tiny, makeshift huts clustered around a spacious rooftop courtyard with a ragged black couch, seemingly dropped and forgotten, positioned off center, and incidentally with a sweeping view of the city. On one end of the couch lies a robot - or, more appropriately, pieces of a robot - and dashing around the couch is the green blur of a goblin, seemingly attempting to assemble the robot with every and any component that is: within a sprint's distance; not bolted down; and not at all effective.",
-        },
+            "initial_reality": "A sprawling shantytown built on the interconnected rooftops of a sleeping city. Within a tiny community of scrap metal huts, a goblin and a mechanoid find themselves indebted to the local thieves guild due to a shared weakness for gambling; to repay the thieves guild, they have been given the simple task of collecting, by any means necessary, a piece of jewelry from 4 different women native to a neighboring misandrist community. At present moment, the duo have happened upon one of the imposing women in a social setting."
+        }
+        ,
     }
 
     return config

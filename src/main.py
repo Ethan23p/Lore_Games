@@ -1,15 +1,17 @@
 # main.py
 
-import asyncio
-from app import LoreGamesApp
+"""
+Main entry point for the Lore Games application.
 
-async def main():
-    """The main entry point for the application."""
-    game_app = LoreGamesApp()
-    await game_app.run()
+This script now launches the Textual-based user interface.
+"""
+
+from tui import LoreGamesApp
+
+def main():
+    """Initializes and runs the TUI application."""
+    app = LoreGamesApp()
+    app.run()
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\nSimulation exited.")
+    main()

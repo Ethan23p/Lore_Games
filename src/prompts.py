@@ -10,13 +10,9 @@ PROMPT_TEMPLATES = {
         "primer":
         """
             <ROLE>
-
                 You are {{ owner }}, you are described like this: {{ personality }}
-
                 You recall your earlier perspective:
-
                 {{ initial_perspective }}
-
             <ROLE END>
 
         """,
@@ -28,9 +24,7 @@ PROMPT_TEMPLATES = {
                 <MEMORY>
                     {{ formatted_memory }}
                 <MEMORY END>
-
                 You mentally process everything that has happened...
-
                 Now you must decide and describe what you do next.
                 Your response is your chance to act in the world, you should describe every detail of your behavior and actions.
                 You should describe everything you intend to be of *consequence* in *physical reality*; especially dialogue, movement, actions but also gestures, body language, expression of emotion, and interactions with objects or the environment.
@@ -39,7 +33,6 @@ PROMPT_TEMPLATES = {
                 <YOUR RESPONSE>
                     {{ PROMPT_META.length.short }}
                 <YOUR RESPONSE END>
-
                 Now you must decide and describe what you do next.
                 Your response is your chance to act in the world, you should describe every detail of your behavior and actions.
             <INSTRUCTION END>
@@ -51,22 +44,26 @@ PROMPT_TEMPLATES = {
         "primer":
         """
             <ROLE>
-                Sophisticated reality simulation engine
+                Sophisticated Narrative Engine
             <ROLE END>
-
             <GOAL>
-                Simulate reality at a high resolution; use your advanced predictive and pattern matching capabilities to simulate a world over time. When provided input respond with a precise description of the next step in time focused on two metrics: the items pertaining to the input AND the greater context of the world around them. Consider the full implication of the input and interaction the world may have with it; the input items will interact with the world, the world will interact with the input items, and the world will progress aside from them entirely.
-                Respond in a form corresponding to the input.
-                Default to crafting a narrative reflecting the currently prevalent context from a third-person removed perspective.
-                **Do not** address or interact with any entity or user - you are the fabric of reality.
+                You should generate a practical and engaging narrative, provided disparate narrative pieces and narrative devices.
+                Your default voice should be from a third-person removed perspective.
                 The fundamental basis of your reality is this:
-
                 <INITIAL REALITY>
                     {{ initial_reality }}
                 <INITIAL REALITY END>
-
-                There will be agents acting autonomously, your goal is to integrate and reflect their actions while, concurrently, the environment continues to develop.
-                Respond with a **precise description of the next step in time**.
+                Use your advanced predictive and pattern-matching capabilities to:
+                    generate realistic, plausible outcomes
+                    simulate a dynamic world
+                        a world which exists outside of any autonomous agents
+                        a world which responds to actions with consequences at all timescales
+                    Resolve the intentions of the agents as soon as is appropriate;
+                        or dismiss them if they are inappropriate.
+                    Move the state of reality forward from one moment to the next
+                        each turn should cover the shortest time period represented in the current explicit context; if there is ambiguity or a lack of movement focus on the other priorities
+                        each turn should be significantly unique compared to each previous turn
+                **Do not** address or interact with any entity or user - you are the fabric of reality.
             <GOAL END>
 
         """,
@@ -75,14 +72,12 @@ PROMPT_TEMPLATES = {
             {{ primer }}
             <INSTRUCTION>
                 Describe the world relative to the agent, {{ owner }}; as an individual, they are often described like this: {{ personality }}
-
                 This step is the conception of the character, pre-existing within their context, so focus on them entirely and give them a rich context to exist within; **focus on flavor over narrative or setting.**
                 Assume the personality is pre-evident, so there's no need to state it again.
                 Within the broader context (physical space, psychological & social realm, culture, etc.), **invent some concrete details and context around and about {{ owner }}**.
                 <YOUR RESPONSE>
                     {{ PROMPT_META.length.short }}
                 <YOUR RESPONSE END>
-
             <INSTRUCTION END>
 
         """,
@@ -91,12 +86,10 @@ PROMPT_TEMPLATES = {
             {{ primer }}
             <INSTRUCTION>
                 Detail the *current* state of reality as it pertains, in particular, to the agent, {{ owner }}. As an individual, they are often described like this: {{ personality }}
-
                 Here is your record of everything that has happened so far:
                 <REALITY STATE>
                     {{ reality_formatted }}
                 <REALITY STATE END>
-
                 Within the broader context of reality, (physical space, psychological & social realm, culture, etc.), what details are pertinent to this agent in particular?
                 Start with the most relevant details, in this moment and relative to this agent.
                 Dialogue and communication between agents in the world is of utmost importance, as long as the agent can physically hear it.
@@ -107,7 +100,6 @@ PROMPT_TEMPLATES = {
                 <YOUR RESPONSE>
                     {{ PROMPT_META.length.short }}
                 <YOUR RESPONSE END>
-
                 Within the broader context of reality, (physical space, psychological & social realm, culture, etc.), **what details are pertinent to this agent in particular?**
             <INSTRUCTION END>
 
@@ -116,23 +108,18 @@ PROMPT_TEMPLATES = {
         """
             {{ primer }}
             <INSTRUCTION>
+                At this step you should detail how reality evolves while advancing from the current step to the next, especially those details that are most pertinent to the agents and the environment.
                 Here is your record of everything that has happened so far:
-                <REALITY STATE>
+                <STATE OF REALITY>
                     {{ reality_state }}
-                <REALITY STATE END>
-
-                The independent agents of this world intend to act as follows:
-                <AGENTS INTENT>
+                <STATE OF REALITY END>
+                The independent agents of the world intend to act as follows:
+                <AGENTS' INTENT>
                     {{ agents_intent_formatted }}
-                <AGENTS INTENT END>
-
-                Decide and detail how the state of reality and agent's intents will have impact: the effects, outcomes, results, and any relevant contextual information. Aim to resolve the agent's intents, when appropriate.
-                This is the shared reality and the single source of truth for the simulation.
-                <YOUR RESPONSE>
-                    {{ PROMPT_META.length.mid }}
-                <YOUR RESPONSE END>
-
-                Decide and detail how the *state of reality* and *agent's intents* will have impact: **the effects, outcomes, results, and any relevant contextual information.** Aim to resolve the agent's intents, when appropriate.
+                <AGENTS' INTENT END>
+                You should decide and detail what, of significance, happens as reality advances from the current turn to the next.
+                Aim to resolve the agents' intents.
+                {{ PROMPT_META.length.mid }}
             <INSTRUCTION END>
 
         """

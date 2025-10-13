@@ -1,0 +1,92 @@
+/* General screen and layout styling */
+Screen {
+    background: $surface;
+    color: $text;
+    layout: vertical;
+}
+
+#app-grid {
+    layout: horizontal;
+    height: 1fr;
+}
+
+/* Header and Footer styling */
+Header {
+    dock: top;
+    background: $secondary;
+    color: $text;
+}
+
+Footer {
+    dock: bottom;
+    background: $secondary;
+    color: $text;
+}
+
+/* Sidebar styling */
+#navigator {
+    width: 30;
+    border-right: solid $border;
+    overflow-y: auto;
+    background: $surface;
+}
+
+#navigator ListItem {
+    padding: 1;
+}
+
+#navigator ListItem.--highlight {
+    background: $accent;
+}
+
+/* Main content area container */
+#main-content {
+    width: 1fr;
+    height: 100%;
+    layout: vertical;
+}
+
+#main-log {
+    height: 1fr;
+    padding: 1;
+    background: $background;
+}
+
+/* The composite input bar styling */
+#input-container {
+    dock: bottom;
+    height: 3;
+    layout: horizontal;
+    padding: 0 1;
+    background: $panel;
+}
+
+#main-input {
+    width: 1fr;
+    height: 100%;
+    border: none;
+    background: $panel;
+    padding: 0 1;
+}
+
+#next-turn-button {
+    dock: bottom;
+    width: 100%;
+    height: 3;
+    border: none;
+    background: $accent;
+    color: $surface;
+}
+
+#next-turn-button:hover {
+    background: $secondary;
+}
+
+.hidden {
+    display: none;
+}
+
+LoadingIndicator {
+    dock: bottom;
+    height: 1;
+}
