@@ -3,11 +3,11 @@
 import os
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal
-from textual.widgets import Header, Footer, Button, Markdown, ListView, ListItem, Label, LoadingIndicator, Input
+from textual.widgets import Header, Footer, Button, Markdown, ListView, ListItem, Label, Input
 from textual import on, work
 from textual.theme import Theme
 
-from app import SimulationEngine
+from .app import SimulationEngine
 
 # Color scheme from the reference app
 COLORS = {
@@ -50,7 +50,8 @@ class LoreGamesApp(App):
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
-        yield Header()
+        with Header():
+            yield Label("", id="loading-status")
         with Container(id="app-grid"):
             yield ListView(
                 ListItem(Label("Environment"), id="Environment"),
@@ -61,7 +62,6 @@ class LoreGamesApp(App):
                 yield Markdown(id="main-log")
                 with Horizontal(id="input-container"):
                     yield Input(placeholder="Future commands...", disabled=True, id="main-input")
-        yield LoadingIndicator(classes="hidden")
         yield Button("Next Turn", id="next-turn-button", variant="primary")
         yield Footer()
 
@@ -70,9 +70,9 @@ class LoreGamesApp(App):
         self.register_theme(CUSTOM_THEME)
         self.theme = "creamy-dark"
         markdown_viewer = self.query_one(Markdown)
-        markdown_viewer.update("[bold green]## Initializing Simulation...[/bold green]")
+        markdown_viewer.update("## Initializing Simulation...")
         await self.simulation.initialize_simulation()
-        markdown_viewer.update("[bold green]## Simulation Initialized. Ready for Turn 1.[/bold green]")
+        markdown_viewer.update("## Simulation Initialized. Ready for Turn 1.")
         self.query_one("#next-turn-button").focus()
         await self._update_main_log()
 
@@ -102,13 +102,13 @@ class LoreGamesApp(App):
             }
 
         if self.current_view == "Environment" and self.simulation.current_turn == 0:
-            content = f"""[bold green]## Displaying: Initial Reality (Turn 0)[/bold green]\n\n{self.simulation.environment.reality[0] if self.simulation.environment else ''}"""
+            content = f"""## Displaying: Initial Reality (Turn 0)\n\n{self.simulation.environment.reality[0].content if self.simulation.environment else ''}"""
             markdown_viewer.update(content)
             return
 
         filename = file_map.get(self.current_view)
         if not filename:
-            markdown_viewer.update(f"[bold red]No view available for '{self.current_view}' in Turn {self.simulation.current_turn}[/bold red]")
+            markdown_viewer.update(f"## No view available for '{self.current_view}' in Turn {self.simulation.current_turn}")
             return
 
         filepath = os.path.join(turn_dir, filename)
@@ -117,7 +117,7 @@ class LoreGamesApp(App):
                 content = f.read()
             markdown_viewer.update(content)
         except FileNotFoundError:
-            markdown_viewer.update(f"[bold red]Log file not found for {self.current_view} in Turn {self.simulation.current_turn}[/bold red]\nPath: {filepath}")
+            markdown_viewer.update(f"## Log file not found for {self.current_view} in Turn {self.simulation.current_turn}\nPath: {filepath}")
 
     @on(ListView.Selected)
     async def on_view_selected(self, event: ListView.Selected) -> None:
@@ -129,23 +129,24 @@ class LoreGamesApp(App):
     @on(Button.Pressed, "#next-turn-button")
     def on_next_turn_button(self) -> None:
         """Handle the 'Next Turn' button press by starting the worker."""
-        self.query_one(LoadingIndicator).remove_class("hidden")
         self.query_one("#next-turn-button").disabled = True
         self.run_turn_worker()
 
     @work(thread=True)
     async def run_turn_worker(self) -> None:
         """Runs a single simulation turn in a background thread."""
-        markdown_viewer = self.query_one(Markdown)
+        status_label = self.query_one("#loading-status", Label)
         try:
-            self.call_from_thread(markdown_viewer.update, f"\n[bold yellow]ACTION: Running turn {self.simulation.current_turn + 1}...[/bold yellow]")
+            self.call_from_thread(status_label.update, "🔄 Generating...")
             await self.simulation.run_single_turn()
-            self.call_from_thread(markdown_viewer.update, f"[bold green]Turn {self.simulation.current_turn} complete.[/bold green]")
             await self._update_main_log()
         except Exception as e:
-            self.call_from_thread(markdown_viewer.update, f"[bold red]An error occurred during the simulation: {e}[/bold red]")
+            # If there's an error, we can show it in the log
+            log_view = self.query_one(Markdown)
+            self.call_from_thread(log_view.update, f"[bold red]An error occurred during the simulation: {e}[/bold red]")
         finally:
-            self.call_from_thread(self.query_one(LoadingIndicator).add_class, "hidden")
+            # Clear status and re-enable button
+            self.call_from_thread(status_label.update, "")
             self.call_from_thread(setattr, self.query_one("#next-turn-button"), "disabled", False)
 
 if __name__ == "__main__":

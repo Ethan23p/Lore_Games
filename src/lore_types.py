@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import TypeAlias, Dict, TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from entities import Agent
+    from .entities import Agent
 
 # --- Core Type Aliases ---
 EntityID: TypeAlias = str

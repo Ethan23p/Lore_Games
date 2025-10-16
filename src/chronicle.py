@@ -1,13 +1,15 @@
 # chronicle.py
 
 import os
+import textwrap
 from functools import singledispatchmethod
 from dataclasses import fields
 from typing import Coroutine, TypeVar, Any, Dict
-from lore_types import (
+
+from .lore_types import (
     BaseAIInteraction, InitialPerspective, Perspective, Intention, Divination, Reality
 )
-from ai_handler import AIGenerationError
+from .ai_handler import AIGenerationError
 
 T = TypeVar('T', bound=BaseAIInteraction)
 
@@ -106,17 +108,14 @@ class Chronicle:
         header = f"### Turn: {interaction.turn_origin} | {title}{owner_part}\n\n"
 
         # Content section is always present
-        display_content = ""
-        if hasattr(interaction, 'full_history') and interaction.full_history:
-            display_content = interaction.full_history
-        else:
-            display_content = interaction.content or 'None'
+        display_content = interaction.content or 'None'
         content_section = f"\n#### Content\n\n{display_content}\n\n"
 
         # Prompt section is now always included if available
         prompt_section = ""
         if hasattr(interaction, 'prompt') and interaction.prompt:
-            prompt_section = f"\n#### Prompt\n\n>{interaction.prompt}\n\n"
+            dedented_prompt = textwrap.dedent(interaction.prompt).strip()
+            prompt_section = f"\n#### Prompt\n\n{dedented_prompt}\n\n"
 
         # Metadata section is conditional on debug_mode
         metadata_section = ""
@@ -128,7 +127,7 @@ class Chronicle:
                     value = getattr(interaction, f.name)
                     if value:
                         metadata_fields.append(f"\n- **{f.name}**:\n{value}\n\n")
-            
+
             if metadata_fields:
                 metadata_section = "\n#### Metadata\n\n" + "".join(metadata_fields)
 
@@ -190,8 +189,21 @@ class Chronicle:
 
     @log.register
     def _(self, interaction: Reality):
-        self._process_log(
-            interaction,
-            filename="reality.md",
-            title="Final Reality"
-        )
+        """Specialized logger for the final Reality object."""
+        if self.should_print_cmd:
+            console_output = self._format_for_console(interaction)
+            if console_output:
+                print(console_output)
+
+        if self.should_write_file:
+            title = "Final Reality"
+            owner_part = f" | Owner: {interaction.owner}"
+            header = f"### Turn: {interaction.turn_origin} | {title}{owner_part}\n\n"
+            content_section = f"\n#### Content\n\n{interaction.content}\n\n"
+            history_section = f"\n#### Full History\n\n{interaction.full_history}\n\n"
+
+            file_content = header + content_section + history_section
+            turn_dir = os.path.join(self.base_path, f"turn_{interaction.turn_origin:03d}")
+            os.makedirs(turn_dir, exist_ok=True)
+            with open(os.path.join(turn_dir, "reality.md"), 'w', encoding='utf-8') as f:
+                f.write(file_content)

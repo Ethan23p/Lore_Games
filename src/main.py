@@ -6,7 +6,7 @@ Main entry point for the Lore Games application.
 This script now launches the Textual-based user interface.
 """
 
-from tui import LoreGamesApp
+from .tui import LoreGamesApp
 
 def main():
     """Initializes and runs the TUI application."""

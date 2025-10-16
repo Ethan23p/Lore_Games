@@ -4,12 +4,12 @@ from typing import Dict, Any
 import textwrap
 from dataclasses import replace
 
-from ai_handler import AIHandler
-from lore_types import (
+from .ai_handler import AIHandler
+from .lore_types import (
     EntityID, Personality, Memory, Turn, Intention, InitialPerspective,
     Perspective, Divination, PrimerContent, AgentsIntent
 )
-from prompts import PromptRenderer
+from .prompts import PromptRenderer
 
 class Agent:
     """Represents an autonomous entity that can perceive, reason, and act."""
@@ -61,7 +61,16 @@ class Environment:
     """Represents the shared reality and orchestrates simulation turns."""
     def __init__(self, id: EntityID, initial_reality: str, ai_handler: AIHandler, renderer: PromptRenderer):
         self.id: EntityID = id
-        self.reality: dict[Turn, str] = {0: initial_reality}
+        # Create a dummy Divination for turn 0 to ensure type consistency
+        turn_0_divination = Divination(
+            owner=id,
+            turn_origin=0,
+            content=initial_reality,
+            primer="",
+            reality_state="",
+            agents_intent_formatted=""
+        )
+        self.reality: dict[Turn, Divination] = {0: turn_0_divination}
         self.agents_intent: AgentsIntent = {}
         self.ai_handler = ai_handler
         self.renderer = renderer
@@ -90,7 +99,8 @@ class Environment:
 
     async def reflect(self, agent: "Agent", turn: Turn) -> Perspective:
         """Generates an agent's perspective on the current reality."""
-        current_reality = self.reality.get(turn - 1, "A formless void.")
+        last_divination = self.reality.get(turn - 1)
+        current_reality = last_divination.content if last_divination else "A formless void."
         request = Perspective(
             owner=agent.id,
             turn_origin=turn,
@@ -116,7 +126,7 @@ class Environment:
     async def divine(self, current_turn: Turn) -> Divination:
         """Interprets intentions and produces the next state of reality."""
         reality_state = "\n\n".join(
-            f"### Turn {t}\n\n{r}" for t, r in sorted(self.reality.items())
+            f"### Turn {t}\n\n{div.content}" for t, div in sorted(self.reality.items())
         )
         agents_intent_formatted = "\n".join(
             f"Agent {id}'s intention: {intent.content}" for id, intent in self.agents_intent.items()

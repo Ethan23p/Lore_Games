@@ -50,6 +50,7 @@ Footer {
     height: 1fr;
     padding: 1;
     background: $background;
+    overflow-y: auto;
 }
 
 /* The composite input bar styling */
